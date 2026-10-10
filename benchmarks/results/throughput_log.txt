@@ -1,0 +1,2 @@
+oltp {'backlog_wal_bytes': 153529944, 'drain_s': 30.78, 'txns': 296870, 'changes': 296870, 'txns_per_s': 9645, 'changes_per_s': 9645, 'wal_mib_per_s': 4.76}
+bulk {'backlog_wal_bytes': 64192400, 'drain_s': 5.97, 'txns': 1, 'changes': 500000, 'txns_per_s': 0, 'changes_per_s': 83698, 'wal_mib_per_s': 10.25}

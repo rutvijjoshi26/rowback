@@ -1,0 +1,34 @@
+dataset 1000000 rows: seeding
+  backups
+  writes after the backup
+  incident: delete 10000 rows
+    undo 0.95s (find 0.0047 plan 0.039 apply 0.906) match=True preserved=994/995
+  incident: delete 50000 rows
+    undo 1.33s (find 0.0035 plan 0.197 apply 1.13) match=True preserved=976/976
+  incident: delete 100000 rows
+    undo 2.144s (find 0.004 plan 0.391 apply 1.749) match=True preserved=952/954
+  baseline: pg_restore
+    {'pg_restore_s': 6.3, 'inserts_since_backup_lost': 2500, 'inserts_after_incident_lost': 500}
+  baseline: PITR
+    {'pitr_copy_base_s': 8.68, 'pitr_total_s': 25.11, 'pitr_victims_restored_correctly': True, 'inserts_after_incident_lost': 500}
+dataset 5000000 rows: seeding
+  backups
+  writes after the backup
+  incident: delete 10000 rows
+    undo 3.816s (find 0.0106 plan 0.835 apply 2.971) match=True preserved=999/999
+  incident: delete 50000 rows
+Traceback (most recent call last):
+  File "/Users/rutvijjoshi/Projects/rowback/benchmarks/undo_vs_restore.py", line 301, in <module>
+    main()
+  File "/Users/rutvijjoshi/Projects/rowback/benchmarks/undo_vs_restore.py", line 289, in main
+    datasets.append(run_dataset(n, args.deletes))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/rutvijjoshi/Projects/rowback/benchmarks/undo_vs_restore.py", line 250, in run_dataset
+    r = incident(k, store)
+        ^^^^^^^^^^^^^^^^^^
+  File "/Users/rutvijjoshi/Projects/rowback/benchmarks/undo_vs_restore.py", line 126, in incident
+    execute(src(), f"CREATE TABLE victims AS SELECT id FROM orders ORDER BY random() LIMIT {k}")
+  File "/Users/rutvijjoshi/Projects/rowback/benchmarks/common.py", line 85, in execute
+    cur.execute(statement, params)
+psycopg2.errors.DiskFull: could not write to file "base/pgsql_tmp/pgsql_tmp337.0": No space left on device
+

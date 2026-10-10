@@ -1,0 +1,14 @@
+dataset 1000000 rows: seeding
+  backups
+  writes after the backup
+  incident: delete 10000 rows
+    undo 0.572s (find 0.0026 plan 0.056 apply 0.513) match=True preserved=995/995
+  incident: delete 50000 rows
+    undo 1.107s (find 0.0051 plan 0.193 apply 0.909) match=True preserved=984/984
+  incident: delete 100000 rows
+    undo 3.319s (find 0.0066 plan 0.516 apply 2.796) match=True preserved=954/954
+  baseline: pg_restore
+    {'pg_restore_s': 6.9, 'inserts_since_backup_lost': 2500, 'inserts_after_incident_lost': 500}
+  baseline: PITR
+    {'pitr_copy_base_s': 5.06, 'pitr_total_s': 14.77, 'pitr_victims_restored_correctly': True, 'inserts_after_incident_lost': 500}
+saved undo_vs_restore.json

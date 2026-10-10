@@ -1,0 +1,51 @@
+
+== setup: an orders table with 200,000 rows, 40,000 of them pending
+$ rowback init
+initialized slot rowback and publication rowback
+$ rowback track orders
+tracking public.orders (primary key: id, replica identity full)
+pending orders: 40000, fingerprint 8027c1bc4ac1409d638693dd809d3bbe
+
+== normal traffic starts (checkout-service inserts and ships orders)
+
+== an AI coding agent, asked to 'clean up stale test orders', runs this against prod
+ai-agent> DELETE FROM orders WHERE status = 'pending';
+DELETE 40000
+
+== traffic keeps flowing for 5 more seconds after the incident
+
+== find the bad transaction in the timeline
+$ rowback log --since 10m --min-rows 1000
+#233    2026-10-09 15:51:58 xid=1201     40000 delete                   public.orders            postgres@ai-agent
+         DELETE FROM orders WHERE status = 'pending' RETURNING 1
+$ rowback show 233 --rows 2
+transaction #233  xid 1201  commit 2026-10-09 15:51:58.932927-05:00  lsn 0/44C4DE0
+role postgres  application ai-agent
+changes: 40000 delete on public.orders
+statements:
+  DELETE FROM orders WHERE status = 'pending' RETURNING 1
+  delete public.orders {'id': '1', 'customer_id': '2', 'amount': '332.80', 'status': 'pending', 'note': 'gift wrap: 1', 'created_at': '2026-10-09 20:51:56.170162+00'}
+  delete public.orders {'id': '2', 'customer_id': '3', 'amount': '83.99', 'status': 'pending', 'note': 'gift wrap: 2', 'created_at': '2026-10-09 20:51:56.170162+00'}
+
+== preview the inverse SQL
+$ rowback undo 233 --preview --preview-rows 3
+-- rowback undo of transaction 233: 40000 row(s)
+BEGIN;
+INSERT INTO public.orders (id, customer_id, amount, status, note, created_at) VALUES ('1', '2', '332.80', 'pending', 'gift wrap: 1', '2026-10-09 20:51:56.170162+00');
+INSERT INTO public.orders (id, customer_id, amount, status, note, created_at) VALUES ('2', '3', '83.99', 'pending', 'gift wrap: 2', '2026-10-09 20:51:56.170162+00');
+INSERT INTO public.orders (id, customer_id, amount, status, note, created_at) VALUES ('3', '4', '451.55', 'pending', 'gift wrap: 3', '2026-10-09 20:51:56.170162+00');
+-- ... 39997 more rows for insert on public.orders
+COMMIT;
+
+== undo it (one transaction, later writes untouched)
+$ rowback undo 233 --yes
+undo #233 (40000 delete on public.orders, committed 2026-10-09 15:51:58): 40000 row(s) to restore
+restored 40000 row(s) in 0.28s
+
+== verify
+pending orders restored: 40000 (fingerprint 8027c1bc4ac1409d638693dd809d3bbe)
+restored rows identical to the originals: True
+orders written by checkout-service during the demo: 471 (323 after the incident); still present: 471
+orders shipped during the demo: 471; still shipped: 471
+undo command wall time: 0.51s; incident to recovery: 6.1s (includes 5s of deliberate waiting)
+RESULT: PASS

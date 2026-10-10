@@ -1,0 +1,48 @@
+# PostgreSQL configured for logical decoding plus the rowback capture daemon.
+#   docker compose up -d --build
+#   ROWBACK_SOURCE_DSN="host=localhost port=55432 user=postgres password=postgres dbname=shop" \
+#   ROWBACK_HISTORY_DSN="host=localhost port=55432 user=postgres password=postgres dbname=rowback" \
+#   rowback log
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: postgres
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_replication_slots=10
+      - -c
+      - max_wal_senders=10
+      # Protect the primary's disk: a stalled or dead consumer may hold back at most
+      # this much WAL before PostgreSQL invalidates the slot (rowback status reports it).
+      - -c
+      - max_slot_wal_keep_size=4GB
+      - -c
+      - wal_keep_size=0
+    ports:
+      - "55432:5432"
+    volumes:
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d shop"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  capture:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ROWBACK_SOURCE_DSN: host=postgres port=5432 user=postgres password=postgres dbname=shop
+      ROWBACK_HISTORY_DSN: host=postgres port=5432 user=postgres password=postgres dbname=rowback
+    entrypoint: ["sh", "-c", "rowback init && exec rowback capture --retention 7d"]
+    restart: unless-stopped
+
+volumes:
+  pgdata:

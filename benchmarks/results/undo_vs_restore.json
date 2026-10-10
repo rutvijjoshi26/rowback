@@ -1,0 +1,104 @@
+{
+  "environment": {
+    "host_cpu": "Apple M2",
+    "host_memory_bytes": 8589934592,
+    "host_os": "macOS-26.5.1-arm64-arm-64bit",
+    "python": "3.12.9",
+    "docker_vm_cpus": 4,
+    "docker_vm_memory_bytes": 4094005248,
+    "docker_server": "29.5.2",
+    "postgres_image": "postgres:17",
+    "postgres_version": "17.11 (Debian 17.11-1.pgdg13+2)"
+  },
+  "args": {
+    "sizes": [
+      1000000
+    ],
+    "deletes": [
+      10000,
+      50000,
+      100000
+    ],
+    "out": "undo_vs_restore.json"
+  },
+  "datasets": [
+    {
+      "rows": 1000000,
+      "database_bytes": 133609139,
+      "orders_total_bytes": 125755392,
+      "pg_dump_s": 1.44,
+      "dump_bytes": 9849556,
+      "pg_basebackup_s": 2.43,
+      "incidents": [
+        {
+          "deleted_rows": 10000,
+          "delete_statement_s": 0.321,
+          "capture_latency_s": 0.116,
+          "undo_find_s": 0.0026,
+          "undo_plan_s": 0.056,
+          "undo_apply_s": 0.513,
+          "undo_total_s": 0.572,
+          "restored_rows": 10000,
+          "conflicts": 0,
+          "fingerprint_match": true,
+          "good_writes_after_incident": 995,
+          "good_writes_preserved": 995,
+          "pitr_target": "2026-10-10 18:33:14.053794+00:00",
+          "victims_fingerprint": [
+            10000,
+            "666f09feb91aab441f4f83c3fac86ba5"
+          ]
+        },
+        {
+          "deleted_rows": 50000,
+          "delete_statement_s": 0.338,
+          "capture_latency_s": 0.524,
+          "undo_find_s": 0.0051,
+          "undo_plan_s": 0.193,
+          "undo_apply_s": 0.909,
+          "undo_total_s": 1.107,
+          "restored_rows": 50000,
+          "conflicts": 0,
+          "fingerprint_match": true,
+          "good_writes_after_incident": 984,
+          "good_writes_preserved": 984,
+          "pitr_target": "2026-10-10 18:33:17.707192+00:00",
+          "victims_fingerprint": [
+            50000,
+            "dace1aae9b7813c26ca66add2bbc78da"
+          ]
+        },
+        {
+          "deleted_rows": 100000,
+          "delete_statement_s": 0.333,
+          "capture_latency_s": 1.047,
+          "undo_find_s": 0.0066,
+          "undo_plan_s": 0.516,
+          "undo_apply_s": 2.796,
+          "undo_total_s": 3.319,
+          "restored_rows": 100000,
+          "conflicts": 0,
+          "fingerprint_match": true,
+          "good_writes_after_incident": 954,
+          "good_writes_preserved": 954,
+          "pitr_target": "2026-10-10 18:33:24.162331+00:00",
+          "victims_fingerprint": [
+            100000,
+            "74daf4d62ee082e8ecce305df6246b02"
+          ]
+        }
+      ],
+      "pg_restore": {
+        "pg_restore_s": 6.9,
+        "inserts_since_backup_lost": 2500,
+        "inserts_after_incident_lost": 500
+      },
+      "pitr": {
+        "pitr_copy_base_s": 5.06,
+        "pitr_total_s": 14.77,
+        "pitr_victims_restored_correctly": true,
+        "inserts_after_incident_lost": 500
+      }
+    }
+  ]
+}
